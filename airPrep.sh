@@ -1,15 +1,22 @@
 #!/usr/bin/env bash
 
 if [[ $EUID -ne 0 ]]; then
-    echo -e ' [-] Run with sudo. '
-    exit
+    echo -e ' [!] WARNING: Some actions may fail without Root Privileges. '
+    exit 1
 fi
 
-rfkill NetworkManger stop
+echo "[*] Stopping NetworkManager..."
+systemctl stop NetworkManager || echo "[!] Failed to stop NetworkManager, continuing..."
 
-airmon-ng check kill 
+echo "[*] Killing interfering Processes..."
+airmon-ng check kill
 
-read -p "Interface to use for monitoring: " interface
-airmon-ng start $interface
+read -rp "Interface to use for monitoring: " interface
 
-dhclient $interface
+echo "[*] Starting Monitor Mode on $interface..."
+airmon-ng start "$interface"
+
+echo "[*] Requesting IP Address for $interface..."
+dhclient "$interface"
+
+echo "[+] Monitor Mode should now be active on $interface
